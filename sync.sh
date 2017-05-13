@@ -44,7 +44,7 @@ fetch_svn_repo () {
 fetch_git_repo () {
 	rm -rf "$GIT_DIR"
 	echo "Fetch clean GIT repository."
-	if ! git clone $GIT_REPO "$GIT_DIR"; then
+	if ! git clone "$GIT_REPO" "$GIT_DIR"; then
 		echo "Unable to fetch content from GIT repository at URL $GIT_REPO."
 		exit
 	fi
