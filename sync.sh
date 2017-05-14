@@ -59,6 +59,9 @@ stage_and_commit_changes () {
 	svn add . --force > /dev/null
 	svn add ./* --force > /dev/null
 
+  # Untrack files that have been deleted.
+  svn status | grep -v "^.[ \t]*\..*" | grep "^\!" | awk '{print $2}' | xargs svn del
+
 	changes=$(svn status -q)
 	if [[ $changes ]]; then
 		echo "Detected changes in $(pwd), about to commit them."
