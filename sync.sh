@@ -58,7 +58,9 @@ stage_and_commit_changes () {
 	svn add ./* --force > /dev/null
 
   # Untrack files that have been deleted.
-  svn status | grep -v "^.[ \t]*\..*" | grep "^\!" | awk '{print $2}' | xargs svn del
+  # We add an at symbol to every name.
+  # See http://stackoverflow.com/questions/1985203/why-subversion-skips-files-which-contain-the-symbol#1985366
+  svn status | grep -v "^[ \t]*\..*" | grep "^\!" | awk '{print $2 "@"}' | xargs svn del
 
 	changes=$(svn status -q)
 	if [[ $changes ]]; then
@@ -76,9 +78,9 @@ sync_files () {
   local excludeFrom="$source.distignore"
 
   if [ -f "$excludeFrom" ]; then
-    rsync --compress --archive --exclude-from "$excludeFrom" "$source" "$destination"
+    rsync --compress --recursive --delete --delete-excluded --force --archive --exclude-from "$excludeFrom" "$source" "$destination"
   else
-    rsync --compress --archive "$source" "$destination"
+    rsync --compress --recursive --delete --delete-excluded --force --archive "$source" "$destination"
   fi
 }
 
@@ -118,12 +120,6 @@ sync_trunk () {
 
 	echo "Checking out master branch."
 	git checkout master > /dev/null 2>&1
-
-	echo "Erasing previous trunk."
-	rm -rf "$SVN_TRUNK_DIR"
-	# Todo: we also need to delete files from svn
-	# svn del "$SVN_TRUNK_DIR"
-	mkdir "$SVN_TRUNK_DIR"
 
 	echo "Copying files over to svn repository in folder $SVN_TRUNK_DIR."
 	sync_files . "$SVN_TRUNK_DIR"
