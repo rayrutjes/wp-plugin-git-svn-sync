@@ -17,6 +17,10 @@ case $i in
     readonly SVN_USER="${i#*=}"
     shift # past argument=value
     ;;
+    -a=*|--assets-dir=*)
+    readonly ASSETS_DIR="${i#*=}"
+    shift # past argument=value
+    ;;
     *)
 		echo "Unknown option '${i#*=}', aborting..."
 		exit
@@ -25,6 +29,7 @@ esac
 done
 
 readonly GIT_DIR=$(realpath ./git)
+readonly GIT_ASSETS_DIR="$GIT_DIR/${ASSETS_DIR:=.wordpress.org}"
 readonly SVN_DIR=$(realpath ./svn)
 readonly SVN_ASSETS_DIR="$SVN_DIR/assets"
 readonly SVN_TAGS_DIR="$SVN_DIR/tags"
@@ -54,13 +59,28 @@ fetch_git_repo () {
 stage_and_commit_changes () {
 	local message=$1
 
-	svn add . --force > /dev/null
-	svn add ./* --force > /dev/null
+  svn add --force --quiet .
+
+  if [ -d "$ASSETS_DIR" ]; then
+    svn del --force --quiet "$ASSETS_DIR"
+  fi
+
+  find . -type f -name "*.png" \
+    | awk '{print $0 "@"}' \
+    | xargs svn propset --quiet --force svn:mime-type image/png
+
+  find . -type f -name "*.jpg" \
+    | awk '{print $0 "@"}' \
+    | xargs svn propset --quiet --force svn:mime-type image/jpeg
 
   # Untrack files that have been deleted.
   # We add an at symbol to every name.
   # See http://stackoverflow.com/questions/1985203/why-subversion-skips-files-which-contain-the-symbol#1985366
-  svn status | grep -v "^[ \t]*\..*" | grep "^\!" | awk '{print $2 "@"}' | xargs svn del
+  svn status \
+    | grep -v "^[ \t]*\..*" \
+    | grep "^\!" \
+    | awk '{print $2 "@"}' \
+    | xargs svn del --force --quiet
 
 	changes=$(svn status -q)
 	if [[ $changes ]]; then
@@ -88,8 +108,7 @@ sync_tag () {
 	local tag=$1
 
 	if [ -d "$SVN_DIR/tags/$tag" ]; then
-		echo "Tag $tag is already part of the SVN repository."
-		echo
+		# Tag is already part of the SVN repository, stop here.
 		return
 	fi
 
@@ -101,7 +120,6 @@ sync_tag () {
 	echo "Copying files over to svn repository in folder $SVN_DIR/tags/$tag."
 	mkdir "$SVN_DIR/tags/$tag"
   sync_files . "$SVN_DIR/tags/$tag"
-	rm -rf "$SVN_DIR/tags/$tag/assets"
 
 	cd "$SVN_DIR/tags/$tag" || exit
 	stage_and_commit_changes "Release tag $tag"
@@ -123,7 +141,6 @@ sync_trunk () {
 
 	echo "Copying files over to svn repository in folder $SVN_TRUNK_DIR."
 	sync_files . "$SVN_TRUNK_DIR"
-	rm -rf "$SVN_TRUNK_DIR/assets"
 
 	cd "$SVN_TRUNK_DIR" || exit
 	stage_and_commit_changes "Updating trunk"
@@ -133,17 +150,11 @@ sync_assets () {
 	cd "$GIT_DIR" || exit
 	git checkout master > /dev/null 2>&1
 
-	rm -rf "$SVN_ASSETS_DIR"
-	mkdir "$SVN_ASSETS_DIR"
-
-	if [ -d assets ]; then
-		sync_files assets "$SVN_ASSETS_DIR"
+	if [ -d "$GIT_ASSETS_DIR" ]; then
+		sync_files "$GIT_ASSETS_DIR" "$SVN_ASSETS_DIR"
 	fi
 
 	cd "$SVN_ASSETS_DIR" || exit
-	echo "Setting correct mime-types for images."
-	svn propset svn:mime-type image/png ./*.png || true
-	svn propset svn:mime-type image/jpeg ./*.jpg || true
 
 	stage_and_commit_changes "Updating assets"
 }
