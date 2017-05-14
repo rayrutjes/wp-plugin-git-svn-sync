@@ -51,7 +51,7 @@ Checkout an [example of `.distignore` file here](https://github.com/wp-cli/sampl
 
 The script will then expand every line and exclude matching files from synchronization.
 
-### Requirements
+## Requirements
 
 1. Your plugin must have been accepted, and you should have the plugin slug name.
 1. Have a `.wordpress.org` directory containing the screenshots to be displayed
