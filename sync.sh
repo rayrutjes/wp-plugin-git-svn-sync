@@ -54,8 +54,6 @@ fetch_git_repo () {
 stage_and_commit_changes () {
 	local message=$1
 
-	rm -rf "./.git"
-
 	svn add . --force > /dev/null
 	svn add ./* --force > /dev/null
 
@@ -70,6 +68,18 @@ stage_and_commit_changes () {
 		echo "No changes detected changes in $(pwd)."
 	fi
 	echo
+}
+
+sync_files () {
+  local source=$1/
+  local destination=$2/
+  local excludeFrom="$source.distignore"
+
+  if [ -f "$excludeFrom" ]; then
+    rsync --compress --archive --exclude-from "$excludeFrom" "$source" "$destination"
+  else
+    rsync --compress --archive "$source" "$destination"
+  fi
 }
 
 sync_tag () {
@@ -88,7 +98,7 @@ sync_tag () {
 
 	echo "Copying files over to svn repository in folder $SVN_DIR/tags/$tag."
 	mkdir "$SVN_DIR/tags/$tag"
-	cp -R . "$SVN_DIR/tags/$tag"
+  sync_files . "$SVN_DIR/tags/$tag"
 	rm -rf "$SVN_DIR/tags/$tag/assets"
 
 	cd "$SVN_DIR/tags/$tag" || exit
@@ -116,7 +126,7 @@ sync_trunk () {
 	mkdir "$SVN_TRUNK_DIR"
 
 	echo "Copying files over to svn repository in folder $SVN_TRUNK_DIR."
-	cp -R . "$SVN_TRUNK_DIR"
+	sync_files . "$SVN_TRUNK_DIR"
 	rm -rf "$SVN_TRUNK_DIR/assets"
 
 	cd "$SVN_TRUNK_DIR" || exit
@@ -131,7 +141,7 @@ sync_assets () {
 	mkdir "$SVN_ASSETS_DIR"
 
 	if [ -d assets ]; then
-		cp -R assets/. "$SVN_ASSETS_DIR"
+		sync_files assets "$SVN_ASSETS_DIR"
 	fi
 
 	cd "$SVN_ASSETS_DIR" || exit
