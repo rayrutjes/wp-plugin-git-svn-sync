@@ -31,7 +31,7 @@ You can customize this by providing a relative path to your assets directory:
 ./sync.sh \
 	--plugin-name="search-by-algolia-instant-relevant-results" \
 	--git-repo="https://github.com/algolia/algoliasearch-wordpress" \
-	--svn-user=algolia
+	--svn-user=algolia \
 	--assets-dir="screenshots"
 ```
 
