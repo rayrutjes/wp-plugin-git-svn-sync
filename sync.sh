@@ -28,9 +28,9 @@ case $i in
 esac
 done
 
-readonly GIT_DIR=$(realpath ./git)
+readonly GIT_DIR=$(pwd)/git
 readonly GIT_ASSETS_DIR="$GIT_DIR/${ASSETS_DIR:=.wordpress.org}"
-readonly SVN_DIR=$(realpath ./svn)
+readonly SVN_DIR=$(pwd)/svn
 readonly SVN_ASSETS_DIR="$SVN_DIR/assets"
 readonly SVN_TAGS_DIR="$SVN_DIR/tags"
 readonly SVN_TRUNK_DIR="$SVN_DIR/trunk"
