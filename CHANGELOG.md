@@ -1,3 +1,7 @@
+## 0.3.1
+
+- Avoid using non portable `realpath`
+
 ## 0.3.0
 
 - Change default assets directory to `.wordpress.org`
