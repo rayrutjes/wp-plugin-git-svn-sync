@@ -118,7 +118,7 @@ sync_tag () {
 	git checkout "tags/$tag" > /dev/null 2>&1
 
 	echo "Composer install"
-	composer install
+	composer install --no-dev
 
 	echo "Copying files over to svn repository in folder $SVN_DIR/tags/$tag."
 	mkdir "$SVN_DIR/tags/$tag"
@@ -143,7 +143,7 @@ sync_trunk () {
 	git checkout master > /dev/null 2>&1
 
 	echo "Composer install"
-	composer install
+	composer install --no-dev
 
 	echo "Copying files over to svn repository in folder $SVN_TRUNK_DIR."
 	sync_files . "$SVN_TRUNK_DIR"
@@ -157,7 +157,7 @@ sync_assets () {
 	git checkout master > /dev/null 2>&1
 
 	echo "Composer install"
-	composer install
+	composer install --no-dev
 
 	if [ -d "$GIT_ASSETS_DIR" ]; then
 		sync_files "$GIT_ASSETS_DIR" "$SVN_ASSETS_DIR"
