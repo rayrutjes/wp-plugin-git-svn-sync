@@ -65,13 +65,15 @@ stage_and_commit_changes () {
     svn del --force --quiet "$ASSETS_DIR"
   fi
 
-  find . -type f -name "*.png" \
-    | awk '{print $0 "@"}' \
-    | xargs svn propset --quiet --force svn:mime-type image/png
+  png=$(find . -type f -name "*.png")
+  if [[ $png ]]; then
+    find . -type f -name "*.png" | awk '{print $0 "@"}' | xargs svn propset --quiet --force svn:mime-type image/png
+  fi
 
-  find . -type f -name "*.jpg" \
-    | awk '{print $0 "@"}' \
-    | xargs svn propset --quiet --force svn:mime-type image/jpeg
+  jpg=$(find . -type f -name "*.jpg")
+  if [[ $jpg ]]; then
+    find . -type f -name "*.jpg" | awk '{print $0 "@"}' | xargs svn propset --quiet --force svn:mime-type image/jpeg
+  fi
 
   # Untrack files that have been deleted.
   # We add an at symbol to every name.
